@@ -1,24 +1,34 @@
 package ru.university.paymentgateway;
 
-import java.math.BigDecimal;
 import ru.university.paymentgateway.console.ConsoleMenu;
+import ru.university.paymentgateway.dao.MerchantDao;
+import ru.university.paymentgateway.dao.PaymentDao;
+import ru.university.paymentgateway.database.DatabaseConfig;
+import ru.university.paymentgateway.database.DatabaseException;
 import ru.university.paymentgateway.model.Merchant;
-import ru.university.paymentgateway.model.Payment;
 import ru.university.paymentgateway.service.PaymentService;
+import ru.university.paymentgateway.service.RegistrationService;
 
 public class Main {
     public static void main(String[] args) {
-        Merchant merchant = new Merchant(1L, "Учебный магазин", "https://shop.example");
-        Payment payment = new Payment(
-                1001L,
-                new BigDecimal("1490.00"),
-                "RUB",
-                "Оплата заказа 1001",
-                merchant
-        );
+        try {
+            DatabaseConfig database_config = new DatabaseConfig();
+            MerchantDao merchant_dao = new MerchantDao(database_config);
+            PaymentDao payment_dao = new PaymentDao(database_config);
 
-        PaymentService paymentService = new PaymentService(payment);
-        ConsoleMenu menu = new ConsoleMenu(paymentService);
-        menu.run();
+            Merchant merchant = merchant_dao.find_by_id(1L);
+            if (merchant == null) {
+                throw new DatabaseException("Учебный магазин не найден. Выполните make setup-db.");
+            }
+
+            PaymentService payment_service = new PaymentService(payment_dao);
+            RegistrationService registration_service = new RegistrationService(
+                    database_config, merchant_dao, payment_dao);
+            ConsoleMenu console_menu = new ConsoleMenu(payment_service, registration_service, merchant);
+            console_menu.run();
+        } catch (DatabaseException e) {
+            System.out.println("Ошибка базы данных: " + e.getMessage());
+        }
     }
+
 }
