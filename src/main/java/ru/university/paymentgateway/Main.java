@@ -18,7 +18,7 @@ public class Main {
 
             Merchant merchant = merchant_dao.find_by_id(1L);
             if (merchant == null) {
-                throw new DatabaseException("Учебный магазин не найден. Выполните make setup-db.");
+                throw new DatabaseException("Учебный магазин с ID 1 не найден в базе.");
             }
 
             PaymentService payment_service = new PaymentService(payment_dao);
